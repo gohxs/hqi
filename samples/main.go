@@ -61,25 +61,6 @@ func main() {
 	} else {
 		log.Println("Invalid ogin")
 	}
-	//q.Insert(&Person{"Luis", 36, []Data{{"test", 1}, {"test", 2}}})
-	//q.Insert(&Person{"Janaina", 28, []Data{{"test4", 3}, {"test4", 4}}})
-	//q.Insert(&Person{"Luis", 36, Details{"h", "167"}})
-
-	/*mgo.SetDebug(true)
-	var aLogger *log.Logger
-	aLogger = log.New(os.Stderr, "", log.LstdFlags)
-	mgo.SetLogger(aLogger)*/
-	// Native test
-	//var res []Person
-	//q.Find(hqi.M{"Name": "Luis"}).List(&res)
-	//q.Find(hqi.M{"Data": hqi.M{"Kind": "test"}}).List(&res)
-	//log.Println("Persons:", res)
-	//q.Insert(&Person{"Luis", 36})
-	/*q.Find(`{"Details":{"Key":"h"}}`).List(&res)
-	q.Find(hqi.M{"Data": hqi.M{"Details": hqi.M{"Key": "h"}}}).List(&res)
-	log.Println("Persons:", res)
-	q.Find(`{"Data":{"Kind":"test","Details":{"Key":"h"}}}`).List(&res)*/
-
 }
 
 var (

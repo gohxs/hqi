@@ -2,7 +2,6 @@ package drv_test
 
 import (
 	"database/sql"
-	_ "hexasoftware/lib/prettylog/global"
 
 	"os"
 	"testing"

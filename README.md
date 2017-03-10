@@ -91,33 +91,6 @@ after RANGE: RESULT
 * Stage3 All/Delete/Count executors
 
 
-Sample ideas
------------------------
-#### Different way to perform queries:
-
-```go
-	q.Select(&res).      // This could be a struct{Name string}
-		Where(samples...).
-		Sort("field").
-		Limit(1).  // ...int
-		Exec() // We know that will execute here
-```
-this way we can change parts independently and output for different structs?:
-```go
-type Model {
-	Name string
-	Value int
-}
-type ModelName {
-	Name string
-}
-
-qry := q.Select("Name")
-qry.Where({"Test":"1"}).Exec()
-
-qry.Where({"Test":"2"}).Exec()
-```
-
 #### QuerySampler
 
 rules for Find, if we have a model:
@@ -140,7 +113,7 @@ type PersonSampler struct {
 q.FindS(PersonSampler{Age:0}).  // Usually 0 is nothing and won't match
   List(&res)
 // Or also:
-q.FindS(PersonSampler{Age:gocql.Greater(10)}).
+q.FindS(PersonSampler{Age:hqi.Greater(10)}).
   List(&res)
 
 ```
