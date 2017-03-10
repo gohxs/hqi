@@ -1,0 +1,31 @@
+package hql
+
+// Unnecessary Executor
+
+// Collector
+// Should be called executor
+type Executor interface {
+	Matcher
+	Sorter
+	Ranger
+	Retriever
+}
+
+// Initialize the schema
+type Schemer interface {
+	Schema(sample interface{})
+}
+
+type Matcher interface {
+	Match(samples []M)
+}
+type Sorter interface {
+	Sort([]Field)
+}
+type Ranger interface {
+	Range(skip, max int)
+}
+
+type Retriever interface {
+	Retrieve(res interface{})
+}
