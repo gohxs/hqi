@@ -66,24 +66,6 @@ q.Find(`{"Field1":"f1"}`,Model{"f1_1","f2_2"}).List(&result)   // Find where Fie
 
 
 
-### Finder
-
-- OR
-	```go
-// will perform obj1 OR obj2
-q.Find(obj1,obj2)   
-```
-- AND
-	```go
-// will perform  f1 = 1 AND f2 = 2
-q.Find(hqi.M{"f1":1,"f2":2})    
-// Will delete like (name = 'aaa' AND value = 5) OR (name = 'bbb')
-q.Find(hqi.M{"name":"aaa","value":5},hqi.M{"name":"bbb"}).Delete()
-```
-
-- Require complex filter
-- Easy to add
-
 #### Operations (planning)
 
 oper   | function               | equivalence
@@ -154,7 +136,7 @@ q.FindS(PersonSampler{Age:hqi.Greater(10)}).
 -----
 
 - [DRIVER](/drv/README.md)
-- [IDEAS](/doc/IDEAS.md)
+
 
 
 
