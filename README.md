@@ -3,18 +3,48 @@ hqi
 hexa query interface
 
 
-----
-Stage based criterian
-It will return the Proper stage for a flat query
-
 
 Introduction
 ---------------------------------
-hqi means to interface a flat table query into a common solution
+Work In Progress,   
+hqi is meant to interface a flat table query into a common solution and also to easly mock the interface for testing units
 
 
-- [IDEAS](/doc/IDEAS.md)
-- [CHANGELOG](/doc/CHANGELOG.md)
+
+Usage
+---------------------------
+
+to create query interface we use `q := hqi.NewQuery( driver )`
+Using slicedrv
+Lets define a struct:
+
+```go
+type Model struct {
+	Field1 string,
+	Field2 int
+}
+```
+
+Next we instantiate our slice:
+```go
+collection := []Model{}
+```
+
+Now we get a query interface using slice driver passing our collection to driver:
+```go
+q := hqi.NewQuery(&slicedrv.Driver{&collection})
+```
+
+And we can start:
+```go
+q.Insert(Model{"f1","f2"},Model{"f1_1","f2_2"})   // Inserts the two elements into slice
+
+var result []Model{}
+q.Find(Model{"f1","f2"}).List(&result)
+q.Find(`{"Field1":"f1"}`,Model{"f1_1","f2_2"}).List(&result)   // Find where Field1 is f1 OR field1 "f1_1" AND field2 "f2_2"
+```
+
+[slice example](/examples/slice/main.go)
 
 
 
@@ -54,7 +84,7 @@ q.Find(hqi.M{"name":"aaa","value":5},hqi.M{"name":"bbb"}).Delete()
 - Require complex filter
 - Easy to add
 
-#### Operations
+#### Operations (planning)
 
 oper   | function               | equivalence
 -------|------------------------|------------
@@ -121,55 +151,11 @@ q.FindS(PersonSampler{Age:hqi.Greater(10)}).
 
 
 
+-----
 
-#### Internal operation (done)
-
-Samples could be stored in map[string]interface{} to define fields, executors  
-would read from these fields and do the operations,   
-Right now there is no way for a searcher to compary something to 0   
-
-#### Executor vs Query
-
-was experimenting to change The executor back to  one function to make the implementation less complex
-as it now user must to create the driver with some funcitons and executor with others
-Single Implementation in one struct would be better
+- [DRIVER](/drv/README.md)
+- [IDEAS](/doc/IDEAS.md)
 
 
-#### Possibilities
-
-Imagine a common DB struct with several data tables
-
-and a Frontend that we would be able to execute standard SQL
-
-```go
-db := hdb.PrepareDB();
-db.Collection("User",mgodrv.Driver{d.DB("dbtest").C("user")})
-db.Collection("Things",slicedrv.Driver{[]MySlice{}})
-db.Collection("orders",sqldrv.Driver{sql.Open("postgres","dsn")})
-db.Collection("invoices",restdrv.Driver{"http://api.domain.tld"})
-
-rows,err := db.Query("select * from User")
-rows.Next()
-
-```
-
-
-
-
-03-02-2017
-----
-### Added
-- Implemented Delete in drivers
-
-### Changed
-- Chaged Range to Limit
-- Package is now named as hqi, changed l from language to i interface (hexasoftware|High|hyper) query interface
-- Sort no longer requires two fields Prefix is - would also be > greater to smaller?  before:
-  ```go
-//Before:
-q.Find().SortAsc("field1","field2").SortDesc("field3").SortAsc("field4")
-// Now:
-q.Find().Sort("field1","field2","-field3","field4")
-```
 
 
