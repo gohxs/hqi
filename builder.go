@@ -4,10 +4,13 @@ package hqi
 
 //SecondStage Second stage where dev can Sort or do the rest
 type (
-	FirstStage interface {
+	// All stages
+
+	/*FirstStage interface {
 		Where(samples ...interface{})
 		SecondStage
-	}
+	}*/
+
 	SecondStage interface { // Or first
 		Sort(...string) ThirdStage
 		ThirdStage
@@ -24,6 +27,7 @@ type (
 		//One(res interface{}) error  // Cursor instead?
 		List(res interface{}) error // cursor instead?
 		Delete() error
+		Update(val interface{}) error
 		Count() int
 	}
 
@@ -70,18 +74,19 @@ func (b *Builder) Sort(fields ...string) ThirdStage {
 	return &*b // Return copy
 }
 
-// Ranger or Skipper,
+// Skip n records
 func (b *Builder) Skip(n int) ThirdStage {
 	b.data.Skip = n
 	return &*b
 }
 
-// Maxer
+// Max Limit result to n values
 func (b *Builder) Max(n int) ThirdStage {
 	b.data.Max = n
 	return &*b
 }
 
+// Limit firstIndex,lastIndex
 func (b *Builder) Limit(fi, li int) FinalStage {
 	b.data.Skip = fi
 	if li != 0 {
@@ -90,31 +95,22 @@ func (b *Builder) Limit(fi, li int) FinalStage {
 	return &*b // builder copy?
 }
 
+// List results into res
 func (b *Builder) List(res interface{}) error {
 	return b.driver.Query(&b.data, res)
-
-	/*e := b.driver.Executor()
-	return b.data.Execute(e, res) /**/
-
-	// Exec func
 }
+
+// Delete items matched by Find
 func (b *Builder) Delete() error {
 	return b.driver.Delete(&b.data)
 }
+
+// Count results
 func (b *Builder) Count() int {
 	return b.driver.Count(&b.data)
 }
 
-/*
-func (b *Builder) Count() int {
-	b.data.ResultKind = ResultCount
-	var count int
-
-	e := b.driver.Executor()
-
-	err := b.data.Execute(e, &count)
-	if err != nil {
-		return -1
-	}
-	return count
-}*/
+// Update items matched by find
+func (b *Builder) Update(val interface{}) error {
+	return b.driver.Update(&b.data, Struct2M(val))
+}

@@ -9,7 +9,7 @@ type Driver interface {
 	// Queryier or Finder
 	Query(qp *QueryParam, res interface{}) error
 	Delete(qp *QueryParam) error
-	Update(qp *QueryParam, obj interface{}) error
+	Update(qp *QueryParam, data M) error
 
 	Count(qp *QueryParam) int // can error too
 

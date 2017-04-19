@@ -7,54 +7,63 @@ import (
 	"github.com/gohxs/hqi"
 )
 
-// Exeuctor Driver way
-type Executor struct {
+type resList struct {
+	elemIndex int
+}
+
+// executor Driver way
+type executor struct {
 	Coll interface{} // Collection
 
 	collVal reflect.Value
 	collTyp reflect.Type
-	resList reflect.Value
+	//resList reflect.Value
+
+	skip, max int
+
+	startI, endI int
+	resList      []int
 }
 
 //Match matcher implementation
-func (e *Executor) Match(samples []hqi.M) {
+func (e *executor) match(samples []hqi.M) {
 	if len(samples) == 0 {
-		e.resList = e.collVal
+		e.resList = nil
 		return
 	}
-	e.resList = reflect.MakeSlice(e.collTyp, 0, 1)
+	newResList := []int{}
 	for i := 0; i < e.collVal.Len(); i++ {
 		vv := e.collVal.Index(i)
 		v := vv.Interface() // maybe slow :/
-
 		for _, sample := range samples {
 			//log.Println("Matching sample", sample)
 			if !sMatch(sample, v) {
 				continue
 			}
-			e.resList = reflect.Append(e.resList, vv)
+			newResList = append(newResList, i) // append Index
 		}
+	}
+	if newResList != nil {
+		e.resList = newResList
 	}
 }
 
-//Sort implements Sorter
-func (e *Executor) Sort(fields []hqi.Field) {
+func (e *executor) sort(fields []hqi.Field) {
 	if fields == nil {
 		return
 	}
-	if e.resList == e.collVal { // Prevents manipulation on original list
-		reflect.Copy(e.resList, e.collVal)
-		/*e.resList = reflect.MakeSlice(e.collTyp, 0, 1)
+	if e.resList == nil { // Build list
 		for i := 0; i < e.collVal.Len(); i++ {
-			e.resList = reflect.Append(e.resList, e.collVal.Index(i))
-		}*/
+			e.resList = append(e.resList, i) // All indexes
+		}
 	}
-	// if smaller should be true
-	sort.Slice(e.resList.Interface(), func(i, j int) bool {
+
+	// forEach
+	sort.Slice(e.resList, func(i, j int) bool {
 		for _, sf := range fields {
 			sortType := sf.Value
-			f1 := e.resList.Index(i).FieldByName(sf.Name)
-			f2 := e.resList.Index(j).FieldByName(sf.Name)
+			f1 := e.collVal.Index(e.resList[i]).FieldByName(sf.Name)
+			f2 := e.collVal.Index(e.resList[j]).FieldByName(sf.Name)
 			if !f1.IsValid() || !f2.IsValid() {
 				return false
 			}
@@ -64,30 +73,45 @@ func (e *Executor) Sort(fields []hqi.Field) {
 				return (ret < 0) == (sortType == hqi.SortAsc)
 			}
 		}
-		return false // just return something
+		return true // just return something
 	})
 }
 
-//Range implements Ranger
-func (e *Executor) Range(skip, max int) {
-	mlen := e.resList.Len()
-	if skip > mlen {
-		e.resList = reflect.MakeSlice(e.collTyp, 0, 0) // empty
-		return
+func (e *executor) limit(skip, max int) {
+
+	mlen := e.collVal.Len()
+	// StartI endI
+	if e.resList != nil { // carefull nil is empty too?
+		mlen = len(e.resList)
 	}
-	cMax := mlen - skip         // Computed max
-	if max != 0 && max < cMax { //if qd.Max is before list content
-		cMax = max // Max the list qd.Max
+	last := mlen // Total
+
+	// If max is setted we recalculate
+	if max != 0 && (max+skip) < last {
+		last = max + skip // Max the list qd.Max
 	}
-	e.resList = e.resList.Slice(skip, skip+cMax)
+
+	e.startI = skip
+	e.endI = last
 
 }
 
-//Retrieve implements the retriever method for executor
-func (e *Executor) Retrieve(res interface{}) {
-	/*if kind == hqi.ResultCount {
-		reflect.ValueOf(res).Elem().Set(reflect.ValueOf(e.resList.Len()))
-	}*/
-	reflect.ValueOf(res).Elem().Set(e.resList)
-	// Maybe others
+// Create reflected list and retrieve
+func (e *executor) retrieve(res interface{}) { // with limit
+	resData := reflect.MakeSlice(e.collTyp, 0, 1)
+
+	if e.resList == nil {
+		//resData = e.collVal.Slice(e.startI, e.endI) // We should not allow user to edit a collection object directly
+		for i := e.startI; i < e.endI; i++ {
+			v := e.collVal.Index(i)
+			resData = reflect.Append(resData, v)
+		}
+	} else {
+		for i := e.startI; i < e.endI; i++ {
+			v := e.collVal.Index(e.resList[i])
+			resData = reflect.Append(resData, v)
+		}
+	}
+
+	reflect.ValueOf(res).Elem().Set(resData) // is this possible?
 }

@@ -33,29 +33,27 @@ func (d *Driver) Insert(objs ...interface{}) error {
 }
 
 func (d *Driver) Query(qp *hqi.QueryParam, res interface{}) error {
-	e := &Executor{driver: d}
+	e := &executor{driver: d}
 
-	e.Match(qp.Samples)
-	e.Sort(qp.Sort)
-	e.Range(qp.Skip, qp.Max)
-	e.Retrieve(res)
+	e.match(qp.Samples)
+	e.sort(qp.Sort)
+	e.limit(qp.Skip, qp.Max)
+	e.retrieve(res)
 	return nil
 }
 
-/*func (d *Driver) Executor() hqi.Executor {
-	return &Executor{driver: d}
-}*/
 func (d *Driver) Count(qp *hqi.QueryParam) int {
-	return -1
+	return -1 // Not implemented
 }
 
 func (d *Driver) Delete(qp *hqi.QueryParam) error {
-	e := &Executor{driver: d}
-	e.Match(qp.Samples)
-	return e.Delete()
-	//return hqi.ErrNotImplemented
+	e := &executor{driver: d}
+	e.match(qp.Samples)
+	return e.delete()
 }
 
-func (d *Driver) Update(qp *hqi.QueryParam, obj interface{}) error {
-	return hqi.ErrNotImplemented
+func (d *Driver) Update(qp *hqi.QueryParam, obj hqi.M) error {
+	e := &executor{driver: d}
+	e.match(qp.Samples)
+	return e.update(obj)
 }

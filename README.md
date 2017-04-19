@@ -138,6 +138,8 @@ q.FindS(PersonSampler{Age:hqi.Greater(10)}).
 - [DRIVER](/drv/README.md)
 
 
+#### Changes:
 
+* 19-04-2017: Update implemented in mgo and slice
 
 

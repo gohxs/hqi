@@ -10,14 +10,14 @@ import (
 	"gopkg.in/mgo.v2-unstable/bson"
 )
 
-type Executor struct {
+type executor struct {
 	driver *Driver
 	mq     *mgo.Query
 
 	// Query information
-	filter    bson.M
-	sort      []string
-	skip, max int
+	filter     bson.M
+	sortFields []string
+	skip, max  int
 }
 
 // Convert hqiMap to bsonMap
@@ -54,7 +54,7 @@ func hm2bm(obj hqi.M) bson.M {
 	return ret
 }
 
-func (e *Executor) Match(samples []hqi.M) {
+func (e *executor) match(samples []hqi.M) {
 	if len(samples) == 0 {
 		// filter = nil
 		e.mq = e.driver.Coll.Find(nil)
@@ -84,7 +84,7 @@ func (e *Executor) Match(samples []hqi.M) {
 	//log.Println("Coll filter:", e.filter)
 }
 
-func (e *Executor) Sort(fields []hqi.Field) {
+func (e *executor) sort(fields []hqi.Field) {
 	var sortfields []string
 	for _, sf := range fields {
 		if sf.Value == hqi.SortDesc {
@@ -94,29 +94,22 @@ func (e *Executor) Sort(fields []hqi.Field) {
 		sortfields = append(sortfields, fmt.Sprintf("%s", strings.ToLower(sf.Name)))
 	}
 	if len(sortfields) > 0 {
-		e.sort = sortfields
+		e.sortFields = sortfields
 		//XXX e.mq = e.mq.Sort(sortfields...)
 	}
 }
 
-func (e *Executor) Range(skip int, max int) {
+func (e *executor) limit(skip int, max int) {
 	e.skip = skip
 	e.max = max
-	// Leave this to retriever
-	/*if skip > 0 {
-		e.mq = e.mq.Skip(skip)
-	}
-	if max > 0 {
-		e.mq = e.mq.Limit(max)
-	}*/
 }
 
-func (e *Executor) Retrieve(res interface{}) error {
+func (e *executor) retrieve(res interface{}) error {
 
 	mq := e.driver.Coll.Find(e.filter)
 
-	if len(e.sort) > 0 {
-		mq = mq.Sort(e.sort...)
+	if len(e.sortFields) > 0 {
+		mq = mq.Sort(e.sortFields...)
 	}
 	if e.skip > 0 {
 		mq = mq.Skip(e.skip)
@@ -131,7 +124,14 @@ func (e *Executor) Retrieve(res interface{}) error {
 	//}
 }
 
-func (e *Executor) Delete() error {
+func (e *executor) delete() error {
 	_, err := e.driver.Coll.RemoveAll(e.filter)
+	return err
+}
+
+func (e *executor) update(upd interface{}) error {
+	updMgo := bson.M{"$set": hm2bm(upd.(hqi.M))}
+	_, err := e.driver.Coll.UpdateAll(e.filter, updMgo)
+
 	return err
 }

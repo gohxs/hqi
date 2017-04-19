@@ -9,18 +9,21 @@ import (
 	"github.com/gohxs/hqi"
 )
 
+//Driver for sql
 type Driver struct {
 	DB        *sql.DB
 	TableName string
 }
 
 var (
+	//TypeMap to be added when needed
 	TypeMap = map[string]string{
 		"int": "integer", "int8": "integer", "int16": "integer", "int32": "integer", "int64": "integer",
 		"string": "text",
 	}
 )
 
+//Schema execute create table based on struct
 func (d *Driver) Schema(obj interface{}) error {
 	var qry bytes.Buffer
 	qry.WriteString(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (", d.TableName))
@@ -43,6 +46,8 @@ func (d *Driver) Schema(obj interface{}) error {
 
 	return nil
 }
+
+//Insert performs insert statement based on objs
 func (d *Driver) Insert(objs ...interface{}) error {
 
 	var qry bytes.Buffer
@@ -92,29 +97,29 @@ func (d *Driver) Insert(objs ...interface{}) error {
 	return nil
 }
 
+//Query performs a SELECT with OrderBy and Limit if any
 func (d *Driver) Query(qp *hqi.QueryParam, res interface{}) error {
-	e := Executor{driver: d}
-	e.Where(qp.Samples)
-	e.Sort(qp.Sort)
-	e.Limit(qp.Skip, qp.Max)
+	e := executor{driver: d}
+	e.where(qp.Samples)
+	e.sort(qp.Sort)
+	e.limit(qp.Skip, qp.Max)
 
-	return e.Retrieve(res)
+	return e.retrieve(res)
 }
 
+// Count not implemented
 func (d *Driver) Count(qp *hqi.QueryParam) int {
 	return -1
 }
+
+// Delete performs a DELETE statement matched by samples
 func (d *Driver) Delete(qp *hqi.QueryParam) error {
-	e := Executor{driver: d}
-	e.Where(qp.Samples)
-	return e.Delete()
-}
-func (d *Driver) Update(qp *hqi.QueryParam, obj interface{}) error {
-	return hqi.ErrNotImplemented
+	e := executor{driver: d}
+	e.where(qp.Samples)
+	return e.delete()
 }
 
-/*
-func (d *Driver) Executor() hqi.Executor {
-	ex := Executor{driver: d}
-	return &ex
-}*/
+// Update not implemented yet
+func (d *Driver) Update(qp *hqi.QueryParam, obj hqi.M) error {
+	return hqi.ErrNotImplemented
+}

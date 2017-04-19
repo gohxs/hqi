@@ -10,6 +10,29 @@ func isZero(x interface{}) bool {
 	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
 }
 
+func objAssign(target, src interface{}) error {
+	// Target must be pointer
+	//targetTyp := reflect.TypeOf(target)
+	/*if targetTyp.Kind() != reflect.Ptr {
+		return errors.New("Target must be pointer")
+	}*/
+	targetVal := reflect.Indirect(reflect.ValueOf(target))
+
+	switch pv := src.(type) {
+	case hqi.M: // hqi.Map
+		for k, v := range pv {
+			// TODO: do something with k if it has a dot like sub struct
+			fv := targetVal.FieldByName(k)
+			if !fv.IsValid() {
+				continue
+			}
+			fv.Set(reflect.ValueOf(v))
+		}
+
+	}
+	return nil
+}
+
 //nonZero Matcher
 // Extend to use map too,
 // but if it is a map we don't use 0
@@ -22,10 +45,6 @@ func sMatch(sample hqi.M, obj2 interface{}) bool {
 		if !field2.IsValid() { //unmatched field
 			return false
 		}
-
-		//log.Println("Field :", field, "exists")
-		// Check for struct and do a submatch
-		// Deep match
 		if field2.Type().Kind() == reflect.Struct {
 			if tval, ok := value.(map[string]interface{}); ok {
 				return sMatch(tval, field2.Interface())
@@ -34,30 +53,13 @@ func sMatch(sample hqi.M, obj2 interface{}) bool {
 				return sMatch(tval, field2.Interface())
 			}
 			//
-			//log.Println("It is a struct")
 			continue
-			// Same
 		}
-		//log.Println("Field2:", field2, field)
 		//Check zero too
 		if value != field2.Interface() {
 			return false
 		}
 	}
-	/*
-		//val1 := reflect.ValueOf(sample)
-		//typ1 := reflect.TypeOf(sample)
-		for i := 0; i < val1.NumField(); i++ {
-			//fieldName := typ1.Field(i).Name
-			field1 := val1.Field(i)
-			if isZero(field1.Interface()) {
-				continue
-			}
-			field2 := val2.Field(i)
-			if field1.Interface() != field2.Interface() {
-				return false
-			}
-		}*/
 	return true
 }
 

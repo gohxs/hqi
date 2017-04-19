@@ -10,8 +10,8 @@ import (
 	"github.com/gohxs/hqi"
 )
 
-//Executor sqlite executor
-type Executor struct {
+//executor sqlite executor
+type executor struct {
 	driver      *Driver
 	whereClause string
 	orderClause string
@@ -20,7 +20,7 @@ type Executor struct {
 }
 
 //Match matcher implementation
-func (e *Executor) Where(samples []hqi.M) {
+func (e *executor) where(samples []hqi.M) {
 	var qry bytes.Buffer
 	if len(samples) == 0 {
 		return
@@ -58,7 +58,7 @@ func (e *Executor) Where(samples []hqi.M) {
 }
 
 //Sort sorter implementation
-func (e *Executor) Sort(fields []hqi.Field) {
+func (e *executor) sort(fields []hqi.Field) {
 	var qry bytes.Buffer
 	// Sorter
 	for i, sort := range fields {
@@ -77,7 +77,7 @@ func (e *Executor) Sort(fields []hqi.Field) {
 }
 
 //Range ranger implementation
-func (e *Executor) Limit(skip, max int) {
+func (e *executor) limit(skip, max int) {
 	var qry bytes.Buffer
 
 	if max > 0 {
@@ -91,7 +91,7 @@ func (e *Executor) Limit(skip, max int) {
 }
 
 // Retrieve implementation
-func (e *Executor) Retrieve(res interface{}) error {
+func (e *executor) retrieve(res interface{}) error {
 	// ignore kind?
 
 	// Build Select
@@ -149,7 +149,7 @@ func (e *Executor) Retrieve(res interface{}) error {
 	return nil
 }
 
-func (e *Executor) Delete() error {
+func (e *executor) delete() error {
 	var qry bytes.Buffer
 
 	// We have where clause
@@ -175,11 +175,3 @@ func (e *Executor) Delete() error {
 func isZero(x interface{}) bool {
 	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
 }
-
-/*func CreateExecutor(db *sql.DB, tableName string) hqi.ExecFunc {
-	return func(qd *hqi.BuilderData, res interface{}) error {
-		e := &Executor{db: db, tableName: tableName}
-
-		return qd.Execute(e, res)
-	}
-}*/
